@@ -9,6 +9,8 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TelegramBotApi;
+using TelegramBotApi.Enums;
 
 namespace ExtenvBot
 {
@@ -33,6 +35,19 @@ namespace ExtenvBot
 
 
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+
+            // Setup telegram client
+            var accessToken = Configuration["Settings:accessToken"];
+            TelegramClient telegramClient = new TelegramClient(accessToken);
+
+            // Set up webhook
+            string webhookUrl = Configuration["Settings:webhookUrl"];
+            int maxConnections = int.Parse(Configuration["Settings:maxConnections"]);
+            UpdateType[] allowedUpdates = { UpdateType.MessageUpdate };
+
+            telegramClient.SetWebhook(webhookUrl, maxConnections, allowedUpdates);
+
+            services.AddScoped<ITelegramClient>(client => telegramClient);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
