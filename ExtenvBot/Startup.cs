@@ -48,6 +48,10 @@ namespace ExtenvBot
             telegramClient.SetWebhook(webhookUrl, maxConnections, allowedUpdates);
 
             services.AddScoped<ITelegramClient>(client => telegramClient);
+
+            var storageConnectionString = Configuration["Settings:storageConnectionString"];
+            var storage = new Storage(storageConnectionString);
+            services.AddScoped<Storage>(client => storage);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

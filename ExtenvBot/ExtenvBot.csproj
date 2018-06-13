@@ -6,6 +6,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.App" />
+    <PackageReference Include="Microsoft.Azure.CosmosDB.Table" Version="1.1.2" />
+    <PackageReference Include="Microsoft.Azure.Storage.Common" Version="9.4.0.2-preview" />
+    <PackageReference Include="Microsoft.WindowsAzure.ConfigurationManager" Version="3.2.3" />
   </ItemGroup>
 
   <ItemGroup>
