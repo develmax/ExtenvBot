@@ -9,6 +9,7 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Telegram.Bot;
 using TelegramBotApi;
 using TelegramBotApi.Enums;
 
@@ -38,20 +39,28 @@ namespace ExtenvBot
 
             // Setup telegram client
             var accessToken = Configuration["Settings:accessToken"];
-            TelegramClient telegramClient = new TelegramClient(accessToken);
+
+            var bot = new Telegram.Bot.TelegramBotClient(accessToken);
+            
+            //TelegramClient telegramClient = new TelegramClient(accessToken);
 
             // Set up webhook
             string webhookUrl = Configuration["Settings:webhookUrl"];
             int maxConnections = int.Parse(Configuration["Settings:maxConnections"]);
-            UpdateType[] allowedUpdates = { UpdateType.MessageUpdate };
+            //UpdateType[] allowedUpdates = { UpdateType.MessageUpdate };
 
-            telegramClient.SetWebhook(webhookUrl, maxConnections, allowedUpdates);
+            //telegramClient.SetWebhook(webhookUrl, maxConnections, allowedUpdates);
 
-            services.AddScoped<ITelegramClient>(client => telegramClient);
+            bot.SetWebhookAsync(webhookUrl, maxConnections: maxConnections,
+                allowedUpdates: new [] { Telegram.Bot.Types.Enums.UpdateType.Message, Telegram.Bot.Types.Enums.UpdateType.CallbackQuery});
+
+            //services.AddScoped<ITelegramClient>(client => telegramClient);
+
+            services.AddScoped<ITelegramBotClient>(client => bot);
 
             var storageConnectionString = Configuration["Settings:storageConnectionString"];
-            var storage = new Storage(storageConnectionString);
-            services.AddScoped<Storage>(client => storage);
+            var storage = new StorageAzure(storageConnectionString);
+            services.AddScoped<IStorage>(client => storage);
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

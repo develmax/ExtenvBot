@@ -1,5 +1,5 @@
 ﻿using System;
-using Microsoft.Azure.CosmosDB.Table;
+using Microsoft.WindowsAzure.Storage.Table;
 
 namespace ExtenvBot.Models
 {
@@ -20,6 +20,7 @@ namespace ExtenvBot.Models
             get { return this.RowKey; }
         }
 
+        public string Name { get; set; }
         public string Envs { get; set; }
     }
 }
