@@ -26,25 +26,61 @@ namespace ExtenvBot.Controllers
         {
             if (token != _telegramClient.GetConfiguration().AuthenticationToken)
                 return;
-
+            
             if (update != null && update.Message != null && !string.IsNullOrEmpty(update.Message.Text))
             {
-                if (update.Message.Text.StartsWith("/subsribe ", StringComparison.OrdinalIgnoreCase))
+                try
                 {
-                    var envs = update.Message.Text.Substring("/subsribe ".Length).Trim();
+                    if (update.Message.Text.Equals("/start", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _telegramClient.SendMessage(update.Message.Chat.Id, $"Hello! I am TeamCity. Welcome.");
+                    }
+                    else if (update.Message.Text.StartsWith("/subscribe", StringComparison.OrdinalIgnoreCase))
+                    {
+                        string envs;
 
-                    _storage.AddSubscription(update.Message.Chat.Id.ToString(), envs);
+                        if (string.Equals(update.Message.Text.Trim(), "/subscribe", StringComparison.OrdinalIgnoreCase))
+                            envs = "all";
+                        else
+                            envs = update.Message.Text.Substring("/subscribe ".Length).Trim();
 
-                    _telegramClient.SendMessage(update.Message.Chat.Id,
-                        $"I subscribe you on envs: \"{envs}\"");
+                        _storage.Subscribe(update.Message.Chat.Id.ToString(), envs);
+                        
+                        _telegramClient.SendMessage(update.Message.Chat.Id,
+                            $"I subscribe you on envs: \"{envs}\".");
+                    }
+                    else if (update.Message.Text.StartsWith("/unsubscribe", StringComparison.OrdinalIgnoreCase) ||
+                             update.Message.Text.StartsWith("/stop", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _storage.UnSubscribe(update.Message.Chat.Id.ToString());
+
+                        _telegramClient.SendMessage(update.Message.Chat.Id,
+                            $"I unsubscribe you.");
+
+                        if(update.Message.Text.StartsWith("/stop", StringComparison.OrdinalIgnoreCase))
+                            _telegramClient.SendMessage(update.Message.Chat.Id,
+                                $"Bye. I will see you later.");
+                    }
+                    else if (update.Message.Text.StartsWith("/admin", StringComparison.OrdinalIgnoreCase))
+                    {
+                        _storage.AdminId = update.Message.Chat.Id;
+                        _storage.AdminName = update.Message.Chat.Username;
+                        _telegramClient.SendMessage(update.Message.Chat.Id,
+                            $"Set admin is " + update.Message.Chat.Username + ".");
+                    }
+                    else if (_storage.AdminId.HasValue)
+                    {
+                        _telegramClient.SendMessage(update.Message.Chat.Id,
+                            $"Your text translate to TeamCity.");
+                        _telegramClient.SendMessage(_storage.AdminId.Value,
+                            $"Query text by user " + update.Message.Chat.Username + "(" + (update.Message.Chat.FirstName + " " + update.Message.Chat.LastName).Trim() + ")" + ": " + update.Message.Text);
+                    }
                 }
-                else if (update.Message.Text.StartsWith("/unsubsribe", StringComparison.OrdinalIgnoreCase) ||
-                         update.Message.Text.StartsWith("/stop", StringComparison.OrdinalIgnoreCase))
+                catch (Exception e)
                 {
-                    _storage.AddSubscription(update.Message.Chat.Id.ToString(), null);
-
                     _telegramClient.SendMessage(update.Message.Chat.Id,
-                        $"I unsubscribe you.");
+                        $"Exception: {e.ToString()}");
+                    throw;
                 }
             }
         }

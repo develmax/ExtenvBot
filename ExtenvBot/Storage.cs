@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using ExtenvBot.Models;
 using Microsoft.Azure; // Namespace for CloudConfigurationManager
 using Microsoft.Azure.Storage; // Namespace for StorageAccounts
@@ -16,9 +17,45 @@ namespace ExtenvBot
             _connectionString = connectionString;
         }
 
-        public void AddSubscription(string chatId, string envs)
+        private List<SubscriptionEntity> _list = new List<SubscriptionEntity>();
+
+        public void UnSubscribe(string chatId)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_connectionString);
+            var entity = _list.FirstOrDefault(i => string.Equals(i.ChatId, chatId, StringComparison.OrdinalIgnoreCase));
+
+            if (entity != null)
+            {
+                _list.Remove(entity);
+            }
+        }
+
+        public long? AdminId { get; set; }
+        public string AdminName { get; set; }
+
+        public void Subscribe(string chatId, string envs)
+        {
+            var entity = _list.FirstOrDefault(i => string.Equals(i.ChatId, chatId, StringComparison.OrdinalIgnoreCase));
+
+            if (string.IsNullOrEmpty(envs))
+            {
+                if (entity != null)
+                {
+                    _list.Remove(entity);
+                }
+            }
+            else
+            {
+                if (entity != null)
+                {
+                    entity.Envs = envs;
+                }
+                else
+                {
+                    _list.Add(new SubscriptionEntity(chatId) {Envs = envs});
+                }
+            }
+
+            /*CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_connectionString);
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
             // Retrieve a reference to the table.
@@ -72,12 +109,36 @@ namespace ExtenvBot
                     // Execute the insert operation.
                     table.Execute(insertOperation);
                 }
-            }
+            }*/
         }
 
         public string[] GetSubscription(string env)
         {
-            CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_connectionString);
+            if (_list.Count == 0) return null;
+
+            var list = new List<string>();
+
+            foreach (SubscriptionEntity entity in _list)
+            {
+                if (!string.IsNullOrEmpty(entity.Envs))
+                {
+                    var i = entity.Envs.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                    foreach (var s in i)
+                    {
+                        if (string.Equals(s, "all", StringComparison.OrdinalIgnoreCase) ||
+                            string.Equals(s, env, StringComparison.OrdinalIgnoreCase))
+                        {
+                            if (!list.Contains(entity.ChatId))
+                                list.Add(entity.ChatId);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            return list.Count > 0 ? list.ToArray() : null;
+
+            /*CloudStorageAccount storageAccount = CloudStorageAccount.Parse(_connectionString);
             CloudTableClient tableClient = storageAccount.CreateCloudTableClient();
 
             // Retrieve a reference to the table.
@@ -109,7 +170,7 @@ namespace ExtenvBot
                 }
             }
 
-            return list.Count > 0 ? list.ToArray() : null;
+            return list.Count > 0 ? list.ToArray() : null;*/
         }
     }
 }
