@@ -1,19 +1,19 @@
-﻿using System;
-using Microsoft.WindowsAzure.Storage.Table;
+﻿using Microsoft.WindowsAzure.Storage.Table;
 
-namespace ExtenvBot.Models
+namespace ExtenvBot.Storages.Entities
 {
-    public class SubscriptionEntity : TableEntity
+    public class SubscribeEntity : TableEntity
     {
         public const string Key = "Subscription";
+        public const string TableKey = "Subscriptions";
 
-        public SubscriptionEntity(string chatId)
+        public SubscribeEntity(string chatId)
         {
             this.PartitionKey = Key;
             this.RowKey = chatId;
         }
 
-        public SubscriptionEntity() { }
+        public SubscribeEntity() { }
 
         public string ChatId
         {

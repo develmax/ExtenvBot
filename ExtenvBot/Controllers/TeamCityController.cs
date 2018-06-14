@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ExtenvBot.DataAccesses;
+using ExtenvBot.Storages;
 using Microsoft.AspNetCore.Mvc;
 using Newtonsoft.Json;
 using Telegram.Bot;
@@ -14,13 +16,11 @@ namespace ExtenvBot.Controllers
     [Route("api/[controller]")]
     public class TeamCityController : Controller
     {
-        //ITelegramClient _telegramClient;
         ITelegramBotClient _bot;
-        private IStorage _storage;
-        public TeamCityController(ITelegramBotClient bot /*ITelegramClient telegramClient*/, IStorage storage) {
-            //_telegramClient = telegramClient;
+        private IDataAccess _dataAccess;
+        public TeamCityController(ITelegramBotClient bot, IDataAccess dataAccess) {
             _bot = bot;
-            _storage = storage;
+            _dataAccess = dataAccess;
         }
 
         // GET api/telegram/update/{token}
@@ -31,7 +31,7 @@ namespace ExtenvBot.Controllers
                 string.IsNullOrEmpty(message.Env) ||
                 string.IsNullOrEmpty(message.Text)) return;
 
-            var subscriptions = _storage.GetSubscription(message.Env);
+            var subscriptions = _dataAccess.SubscribesDataAccess.GetChatIdsByEnv(message.Env);
             if (subscriptions != null)
             {
                 foreach (var subscription in subscriptions)
@@ -41,9 +41,12 @@ namespace ExtenvBot.Controllers
                         icon = "\U0000274C" + " ";
                     else if (message.Text.Contains("success", StringComparison.OrdinalIgnoreCase))
                         icon = "\U00002705" + " ";
+                    else if (message.Text.Contains("bug", StringComparison.OrdinalIgnoreCase))
+                        icon = "\U0001F41B" + " ";
+                    else if (message.Text.Contains("create", StringComparison.OrdinalIgnoreCase))
+                        icon = "\U0001F4CC" + " ";
 
                     if (long.TryParse(subscription, out var chatId))
-                        //_telegramClient.SendMessage(chatId, message.Text);
                         _bot.SendTextMessageAsync(chatId, icon + message.Text);
                 }
             }

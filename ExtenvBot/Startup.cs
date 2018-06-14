@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using ExtenvBot.DataAccesses;
+using ExtenvBot.Storages;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
@@ -42,25 +44,27 @@ namespace ExtenvBot
 
             var bot = new Telegram.Bot.TelegramBotClient(accessToken);
             
-            //TelegramClient telegramClient = new TelegramClient(accessToken);
-
             // Set up webhook
             string webhookUrl = Configuration["Settings:webhookUrl"];
             int maxConnections = int.Parse(Configuration["Settings:maxConnections"]);
-            //UpdateType[] allowedUpdates = { UpdateType.MessageUpdate };
-
-            //telegramClient.SetWebhook(webhookUrl, maxConnections, allowedUpdates);
 
             bot.SetWebhookAsync(webhookUrl, maxConnections: maxConnections,
                 allowedUpdates: new [] { Telegram.Bot.Types.Enums.UpdateType.Message, Telegram.Bot.Types.Enums.UpdateType.CallbackQuery});
-
-            //services.AddScoped<ITelegramClient>(client => telegramClient);
 
             services.AddScoped<ITelegramBotClient>(client => bot);
 
             var storageConnectionString = Configuration["Settings:storageConnectionString"];
             var storage = new StorageAzure(storageConnectionString);
-            services.AddScoped<IStorage>(client => storage);
+
+            services.AddScoped<IStorageAzure>(client => storage);
+            services.AddScoped<IStorage>(client => new StorageAzureAdapter(client.GetService<IStorageAzure>()));
+            services.AddTransient<ISubscribesDataAccess, SubscribesDataAccess>();
+            services.AddTransient<ISubscribesDataAccess, SubscribesDataAccess>();
+            services.AddTransient<ISettingsDataAccess, SettingsDataAccess>();
+            services.AddTransient<IExternalCommandDataAccess, ExternalCommandDataAccess>();
+            services.AddTransient<IDataAccess, DataAccess>();
+            
+            services.AddScoped<ISettings>(client => new Settings(client.GetService<ISettingsDataAccess>()));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

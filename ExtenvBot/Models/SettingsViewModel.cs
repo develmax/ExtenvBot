@@ -3,8 +3,8 @@ using ExtenvBot.Storages.Entities;
 
 namespace ExtenvBot.Models
 {
-    public class SubscriptionsViewModel
+    public class SettingsViewModel
     {
-        public List<SubscribeEntity> EntityList { get; set; }
+        public List<SettingEntity> EntityList { get; set; }
     }
 }
