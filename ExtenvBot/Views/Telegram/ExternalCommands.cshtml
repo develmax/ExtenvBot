@@ -1,0 +1,35 @@
+﻿@model ExternalCommandsViewModel
+@{
+    ViewData["Title"] = "Telegram ExternalCommands";
+}
+
+<div class="row">
+    <table class="table">
+        <tr>
+            <td>Id</td>
+            <td>Date</td>
+            <td>ChatId</td>
+            <td>Command</td>
+            <td>Request</td>
+            <td>RequestReceived</td>
+            <td>Response</td>
+            <td>ResponseReceived</td>
+            <td>Processed</td>
+        </tr>
+
+        @for (int i = 0; i < Model.EntityList.Count; i++)
+        {
+        <tr>
+            <td>@Model.EntityList[i].Id</td>
+            <td>@Model.EntityList[i].Date</td>
+            <td>@Model.EntityList[i].ChatId</td>
+            <td>@Model.EntityList[i].Command</td>
+            <td>@Model.EntityList[i].Request</td>
+            <td>@Model.EntityList[i].RequestReceived</td>
+            <td>@Model.EntityList[i].Response</td>
+            <td>@Model.EntityList[i].ResponseReceived</td>
+            <td>@Model.EntityList[i].Processed</td>
+        </tr>
+        }
+    </table>
+</div>

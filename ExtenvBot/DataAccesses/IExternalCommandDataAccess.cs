@@ -6,9 +6,11 @@ namespace ExtenvBot.DataAccesses
     {
         void AddExternalCommand(string id, string chatId, string command, string request);
         ExternalCommandEntity GetNextExternalCommand();
+        ExternalCommandEntity GetExternalCommand(string id);
         void SetRequestReceivedExternalCommand(string id);
         void SetResponseExternalCommand(string id, string response);
         void ResponseReceivedExternalCommand(string id);
         void SetProcessedExternalCommand(string id);
+        ExternalCommandEntity[] GetExternalCommands();
     }
 }

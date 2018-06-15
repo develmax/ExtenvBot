@@ -4,30 +4,30 @@ namespace ExtenvBot.Storages
 {
     public class Settings : ISettings
     {
-        public Settings(ISettingsDataAccess storage)
+        public Settings(ISettingsDataAccess settingsDataAccess)
         {
-            _storage = storage;
+            _settingsDataAccess = settingsDataAccess;
         }
 
-        private ISettingsDataAccess _storage;
+        private ISettingsDataAccess _settingsDataAccess;
 
         public long? AdminId
         {
             get
             {
-                var adminId = _storage.ReadSetting(nameof(AdminId));
+                var adminId = _settingsDataAccess.ReadSetting(nameof(AdminId));
                 if (adminId != null && long.TryParse(adminId, out var value))
                     return value;
 
                 return null;
             }
-            set => _storage.WriteSetting(nameof(AdminId), value.HasValue ? value.ToString() : null);
+            set => _settingsDataAccess.WriteSetting(nameof(AdminId), value.HasValue ? value.ToString() : null);
         }
 
         public string AdminName
         {
-            get => _storage.ReadSetting(nameof(AdminName));
-            set => _storage.WriteSetting(nameof(AdminName), value);
+            get => _settingsDataAccess.ReadSetting(nameof(AdminName));
+            set => _settingsDataAccess.WriteSetting(nameof(AdminName), value);
         }
     }
 }

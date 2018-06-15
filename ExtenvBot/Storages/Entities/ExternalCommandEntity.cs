@@ -12,6 +12,7 @@ namespace ExtenvBot.Storages.Entities
         {
             this.PartitionKey = Key;
             this.RowKey = id;
+            this.Date = date;
             this.ChatId = chatId;
             this.Command = command;
             this.Request = request;
@@ -25,7 +26,8 @@ namespace ExtenvBot.Storages.Entities
         public string Command { get; set; }
         public string Request { get; set; }
         public bool RequestReceived { get; set; }
-        public string ResponseReceived { get; set; }
+        public string Response { get; set; }
+        public bool ResponseReceived { get; set; }
         public bool Processed { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using Microsoft.WindowsAzure.Storage.Table;
 
@@ -7,10 +8,13 @@ namespace ExtenvBot.Storages
     public class StorageAzureAdapter: IStorage
     {
         private IStorageAzure _storageAzure;
+        private Type _storageAzureType;
+        private Dictionary<string, MethodInfo> _storageAzureTypeMethods = new Dictionary<string, MethodInfo>();
 
         public StorageAzureAdapter(IStorageAzure storageAzure)
         {
             _storageAzure = storageAzure;
+            _storageAzureType = _storageAzure.GetType();
         }
 
         public object GetTable(string name)
@@ -28,9 +32,24 @@ namespace ExtenvBot.Storages
             _storageAzure.CreateIfNotExists((CloudTable)table);
         }
 
+        private MethodInfo GetMethod(string name)
+        {
+            if (_storageAzureTypeMethods.ContainsKey(name))
+                return _storageAzureTypeMethods[name];
+
+            if (_storageAzureType == null)
+                _storageAzureType = _storageAzure.GetType();
+
+            var method = _storageAzureType.GetMethod(name);
+
+            _storageAzureTypeMethods.Add(name, method);
+
+            return method;
+        }
+
         public T RetrieveEntity<T>(object table, string partitionKey, string rowkey)
         {
-            var method = typeof(IStorageAzure).GetMethod("RetrieveEntity");
+            var method = GetMethod("RetrieveEntity");
             var generic = method.MakeGenericMethod(typeof(T));
             var entity = generic.Invoke(_storageAzure, new object[]{ (CloudTable)table, partitionKey, rowkey });
 
@@ -39,28 +58,28 @@ namespace ExtenvBot.Storages
 
         public void DeleteEntity<T>(object table, T entity)
         {
-            var method = typeof(IStorageAzure).GetMethod("DeleteEntity");
+            var method = GetMethod("DeleteEntity");
             var generic = method.MakeGenericMethod(typeof(T));
             generic.Invoke(_storageAzure, new object[] { (CloudTable)table, entity });
         }
 
         public void UpdateEntity<T>(object table, T entity)
         {
-            var method = typeof(IStorageAzure).GetMethod("UpdateEntity");
+            var method = GetMethod("UpdateEntity");
             var generic = method.MakeGenericMethod(typeof(T));
             generic.Invoke(_storageAzure, new object[] { (CloudTable)table, entity });
         }
 
         public void InsertEntity<T>(object table, T entity)
         {
-            var method = typeof(IStorageAzure).GetMethod("InsertEntity");
+            var method = GetMethod("InsertEntity");
             var generic = method.MakeGenericMethod(typeof(T));
             generic.Invoke(_storageAzure, new object[] { (CloudTable)table, entity });
         }
 
         public IEnumerable<T> RetrieveEntities<T>(object table)
         {
-            var method = typeof(IStorageAzure).GetMethod("RetrieveEntities");
+            var method = GetMethod("RetrieveEntities");
             var generic = method.MakeGenericMethod(typeof(T));
 
             var entities = generic.Invoke(_storageAzure, new object[] { (CloudTable)table });

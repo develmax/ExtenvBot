@@ -1,0 +1,19 @@
+﻿@model ExternalCommandViewModel
+@{
+    ViewData["Title"] = "Telegram ExternalCommand";
+}
+
+<div class="row">
+    @foreach (var i in Model.Entity.Response.Split("\r\n").Select(i =>
+    {
+        var icon = string.Empty;
+        if (i.Contains("failed", StringComparison.OrdinalIgnoreCase)) icon = "\U0000274C" + " ";
+        else if (i.Contains("success", StringComparison.OrdinalIgnoreCase)) icon = "\U00002705" + " ";
+        else if (i.Contains("bug", StringComparison.OrdinalIgnoreCase)) icon = "\U0001F41B" + " ";
+        else if (i.Contains("create", StringComparison.OrdinalIgnoreCase)) icon = "\U0001F4CC" + " ";
+        return icon + i;
+    }))
+    {
+         @i<br />
+    }
+</div>

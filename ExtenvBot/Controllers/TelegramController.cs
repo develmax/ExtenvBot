@@ -46,6 +46,29 @@ namespace ExtenvBot.Controllers
             return View(new SettingsViewModel { EntityList = settings != null ? settings.ToList() : new List<SettingEntity>() });
         }
 
+        [HttpGet("externalcommands")]
+        public IActionResult ExternalCommands()
+        {
+            var commands = _dataAccess.ExternalCommandDataAccess.GetExternalCommands();
+
+            return View(new ExternalCommandsViewModel { EntityList = commands != null ? commands.ToList() : new List<ExternalCommandEntity>() });
+        }
+
+        [HttpGet("externalcommand/{id}")]
+        public IActionResult ExternalCommand(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+            {
+                var command = _dataAccess.ExternalCommandDataAccess.GetExternalCommand(id);
+                if (command != null)
+                {
+                    return View(new ExternalCommandViewModel() { Entity = command });
+                }
+            }
+
+            return Ok();
+        }
+
         // GET api/telegram/update/{token}
         [HttpPost("update/{token}")]
         public void Update([FromRoute] string token, [FromBody] Telegram.Bot.Types.Update update)
@@ -152,12 +175,10 @@ namespace ExtenvBot.Controllers
 
         private void BuildsCommand(Update update)
         {
-            var envs = _dataAccess.SubscribesDataAccess.GetEnvsByChatId(update.Message.Chat.Id.ToString());
+            var id = Guid.NewGuid().ToString().Substring(0, 8);
+            _dataAccess.ExternalCommandDataAccess.AddExternalCommand(id, update.Message.Chat.Id.ToString(), "builds", null);
 
-            var text = string.IsNullOrEmpty(envs)
-                ? "Subscribe envs is not found."
-                : "Subscribe envs: " + envs.Replace(",", ", ") + ".";
-            _bot.SendTextMessageAsync(update.Message.Chat.Id, text);
+            _bot.SendTextMessageAsync(update.Message.Chat.Id, $"Your request with id = '{id}' add in queue.");
         }
 
         private void StopCommand(Update update)

@@ -57,14 +57,14 @@ namespace ExtenvBot
             var storage = new StorageAzure(storageConnectionString);
 
             services.AddScoped<IStorageAzure>(client => storage);
-            services.AddScoped<IStorage>(client => new StorageAzureAdapter(client.GetService<IStorageAzure>()));
-            services.AddTransient<ISubscribesDataAccess, SubscribesDataAccess>();
-            services.AddTransient<ISubscribesDataAccess, SubscribesDataAccess>();
-            services.AddTransient<ISettingsDataAccess, SettingsDataAccess>();
-            services.AddTransient<IExternalCommandDataAccess, ExternalCommandDataAccess>();
-            services.AddTransient<IDataAccess, DataAccess>();
-            
-            services.AddScoped<ISettings>(client => new Settings(client.GetService<ISettingsDataAccess>()));
+            services.AddScoped<IStorage, StorageAzureAdapter>();
+            services.AddScoped<ISubscribesDataAccess, SubscribesDataAccess>();
+            services.AddScoped<ISubscribesDataAccess, SubscribesDataAccess>();
+            services.AddScoped<ISettingsDataAccess, SettingsDataAccess>();
+            services.AddScoped<IExternalCommandDataAccess, ExternalCommandDataAccess>();
+            services.AddScoped<IDataAccess, DataAccess>();
+
+            services.AddScoped<ISettings, Settings>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
