@@ -123,13 +123,17 @@ namespace ExtenvBot.Controllers
             {
                 StopCommand(update);
             }
-            else if (update.Message.Text.Equals("/list", StringComparison.OrdinalIgnoreCase))
+            else if (update.Message.Text.Equals("/subscribes", StringComparison.OrdinalIgnoreCase))
             {
-                ListCommand(update);
+                SubscribesCommand(update);
             }
-            else if (update.Message.Text.Equals("/builds", StringComparison.OrdinalIgnoreCase))
+            else if (update.Message.Text.Equals("/tasks", StringComparison.OrdinalIgnoreCase))
             {
-                BuildsCommand(update);
+                TasksCommand(update);
+            }
+            else if (update.Message.Text.Equals("/tasklist", StringComparison.OrdinalIgnoreCase))
+            {
+                TaskListCommand(update);
             }
             else if (update.Message.Text.StartsWith("/admin", StringComparison.OrdinalIgnoreCase))
             {
@@ -163,7 +167,7 @@ namespace ExtenvBot.Controllers
                 $"Set admin is " + update.Message.Chat.Username + ".");
         }
 
-        private void ListCommand(Update update)
+        private void SubscribesCommand(Update update)
         {
             var envs = _dataAccess.SubscribesDataAccess.GetEnvsByChatId(update.Message.Chat.Id.ToString());
 
@@ -173,12 +177,22 @@ namespace ExtenvBot.Controllers
             _bot.SendTextMessageAsync(update.Message.Chat.Id, text);
         }
 
-        private void BuildsCommand(Update update)
+        private void TasksCommand(Update update)
         {
             var id = Guid.NewGuid().ToString().Substring(0, 8);
-            _dataAccess.ExternalCommandDataAccess.AddExternalCommand(id, update.Message.Chat.Id.ToString(), "builds", null);
+            _dataAccess.ExternalCommandDataAccess.AddExternalCommand(id, update.Message.Chat.Id.ToString(), "tasks", null);
 
-            _bot.SendTextMessageAsync(update.Message.Chat.Id, $"Your request with id = '{id}' add in queue.");
+            //_bot.SendTextMessageAsync(update.Message.Chat.Id, $"Your request with id = '{id}' add in queue.");
+            _bot.SendTextMessageAsync(update.Message.Chat.Id, $"Request tasks...");
+        }
+
+        private void TaskListCommand(Update update)
+        {
+            var id = Guid.NewGuid().ToString().Substring(0, 8);
+            _dataAccess.ExternalCommandDataAccess.AddExternalCommand(id, update.Message.Chat.Id.ToString(), "tasklist", null);
+
+            //_bot.SendTextMessageAsync(update.Message.Chat.Id, $"Your request with id = '{id}' add in queue.");
+            _bot.SendTextMessageAsync(update.Message.Chat.Id, $"Prepare task list...");
         }
 
         private void StopCommand(Update update)
@@ -286,6 +300,14 @@ namespace ExtenvBot.Controllers
             {
                 UnSubscribeEnvsCallback(update);
             }
+            else if (string.Equals(update.CallbackQuery.Message.Text, "task list:", StringComparison.OrdinalIgnoreCase))
+            {
+                TaskListCallback(update);
+            }
+            else if (update.CallbackQuery.Message.Text.StartsWith("extenv", StringComparison.OrdinalIgnoreCase))
+            {
+                ExtenvCallback(update);
+            }
         }
 
         private void UnSubscribeEnvsCallback(Update update)
@@ -329,6 +351,44 @@ namespace ExtenvBot.Controllers
                         ".");
                 }
             }
+        }
+
+        private void TaskListCallback(Update update)
+        {
+            string envs = null;
+
+            var commands = new List<string> { "RunBuild", "RunDeploy", "Stop", "Status" };
+            var lines = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+
+            int j = 1;
+            for (int i = 0; i < commands.Count; i++)
+            {
+                if (lines.Count < j)
+                    lines.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>());
+
+                lines[j - 1].Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
+                    .WithCallbackData(commands[i]));
+
+                if (lines[j - 1].Count == 2) j++;
+            }
+
+            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(lines);
+
+            _bot.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id, update.CallbackQuery.Data+":",
+                parseMode: Telegram.Bot.Types.Enums.ParseMode.Default,
+                replyMarkup: keyboard);
+        }
+
+        private void ExtenvCallback(Update update)
+        {
+            string extenv = update.CallbackQuery.Message.Text.Replace(":", string.Empty);
+            string command = update.CallbackQuery.Data;
+
+            var id = Guid.NewGuid().ToString().Substring(0, 8);
+            _dataAccess.ExternalCommandDataAccess.AddExternalCommand(id, update.CallbackQuery.Message.Chat.Id.ToString(), command, extenv);
+
+            _bot.SendTextMessageAsync(update.CallbackQuery.Message.Chat.Id,
+                $"Execute " + command + " for " + extenv+"...");
         }
 
         private void SubscribeEnvsCallback(Update update)

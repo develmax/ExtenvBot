@@ -63,7 +63,7 @@ namespace ExtenvBot.Controllers
             {
                 return new ContentResult()
                 {
-                    Content = $"{{ \"id\":\"{command.Id}\", \"command\":\"{command.Command}\", \"request\":{ (string.IsNullOrEmpty(command.Request) ? "\"\"" : command.Request) } }}",
+                    Content = $"{{ \"id\":\"{command.Id}\", \"command\":\"{command.Command}\", \"request\":{ (string.IsNullOrEmpty(command.Request) ? "\"\"" : "\""+ command.Request + "\"") } }}",
                     ContentType = "application/json",
                     StatusCode = 200
                 };
@@ -82,14 +82,71 @@ namespace ExtenvBot.Controllers
                 var command = _dataAccess.ExternalCommandDataAccess.GetExternalCommand(result.Id);
                 if (command != null)
                 {
-                    _dataAccess.ExternalCommandDataAccess.SetResponseExternalCommand(result.Id, result.Response);
-                    
-                    _bot.SendTextMessageAsync(command.ChatId, "Your request id = '"+ result.Id + "' processed. [Show]("+
-                                                              "http://extenvbot.azurewebsites.net/api/telegram/externalcommand/"+ result.Id
-                                                              + ").",
-                        parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                    try
+                    {
+                        _dataAccess.ExternalCommandDataAccess.SetResponseExternalCommand(result.Id, result.Response);
 
-                    _dataAccess.ExternalCommandDataAccess.SetProcessedExternalCommand(result.Id);
+                        if (string.Equals(command.Command, "tasks", StringComparison.OrdinalIgnoreCase))
+                        {
+                            /*_bot.SendTextMessageAsync(command.ChatId,
+                                "Your request id = '" + result.Id + "' processed. [Show](" +
+                                "http://extenvbot.azurewebsites.net/api/telegram/externalcommand/" + result.Id
+                                + ").",
+                                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);*/
+                            _bot.SendTextMessageAsync(command.ChatId,
+                                "Tasks received. [Show](" +
+                                "http://extenvbot.azurewebsites.net/api/telegram/externalcommand/" + result.Id
+                                + ")",
+                                parseMode: Telegram.Bot.Types.Enums.ParseMode.Markdown);
+                        }
+                        else if (string.Equals(command.Command, "tasklist", StringComparison.OrdinalIgnoreCase))
+                        {
+                            var buildsList = !string.IsNullOrEmpty(result.Response)
+                                ? result.Response.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                                : new List<string>();
+
+                            var lines = new List<List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>>();
+
+                            int j = 1;
+                            for (int i = 0; i < buildsList.Count; i++)
+                            {
+                                if (lines.Count < j)
+                                    lines.Add(new List<Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton>());
+
+                                lines[j - 1].Add(Telegram.Bot.Types.ReplyMarkups.InlineKeyboardButton
+                                    .WithCallbackData(buildsList[i]));
+
+                                if (lines[j - 1].Count == 2) j++;
+                            }
+
+                            var keyboard = new Telegram.Bot.Types.ReplyMarkups.InlineKeyboardMarkup(lines);
+
+                            _bot.SendTextMessageAsync(command.ChatId, "Task list:",
+                                parseMode: Telegram.Bot.Types.Enums.ParseMode.Default,
+                                replyMarkup: keyboard);
+                        }
+                        else
+                        {
+                            if (string.Equals(command.Command, "status", StringComparison.OrdinalIgnoreCase))
+                            {
+                                _bot.SendTextMessageAsync(command.ChatId, "Status is " + result.Response + ".");
+                            }
+                            else
+                            {
+                                _bot.SendTextMessageAsync(command.ChatId, command.Command + " is complete.");
+                            }
+                        }
+                    }
+                    catch (Exception e)
+                    {
+                        //Console.WriteLine(e);
+                        _dataAccess.ExternalCommandDataAccess.SetResponseExternalCommand(result.Id, e.ToString());
+
+                    }
+                    finally
+                    {
+                        _dataAccess.ExternalCommandDataAccess.SetProcessedExternalCommand(result.Id);
+                    }
                 }
             }
 
