@@ -109,7 +109,7 @@ namespace ExtenvBot.Controllers
         {
             if (update.Message.Text.Equals("/start", StringComparison.OrdinalIgnoreCase))
             {
-                StartCommand(update);
+                StartCommand(update); 
             }
             else if (update.Message.Text.Equals("/subscribe", StringComparison.OrdinalIgnoreCase))
             {

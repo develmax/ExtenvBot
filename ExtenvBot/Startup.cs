@@ -59,7 +59,6 @@ namespace ExtenvBot
             services.AddScoped<IStorageAzure>(client => storage);
             services.AddScoped<IStorage, StorageAzureAdapter>();
             services.AddScoped<ISubscribesDataAccess, SubscribesDataAccess>();
-            services.AddScoped<ISubscribesDataAccess, SubscribesDataAccess>();
             services.AddScoped<ISettingsDataAccess, SettingsDataAccess>();
             services.AddScoped<IExternalCommandDataAccess, ExternalCommandDataAccess>();
             services.AddScoped<IDataAccess, DataAccess>();
